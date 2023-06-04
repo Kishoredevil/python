@@ -1,0 +1,78 @@
+import random as r
+kl=[]
+ml=[]
+class g():
+    def king(self):
+        f=open('C:/Users/ELCOT/Desktop/tr.txt','r+')
+        b=''
+        k=[]
+        g=[]
+        p=[]
+        for i in range(33,126):
+            v=chr(i)
+            k.append(v)
+            gop=r.randrange(len(k))
+            g.append(gop+1)
+        for j in k:
+            if j in k:
+               realValue = k.index(j)
+               v = g[realValue]
+               for time in range(v):
+                   if time == (v - 1):
+                      b += r.choice(k)
+                      p.append(b)
+                      b=''
+                      if j == k[-1]:
+                         b=''
+                         break
+                      break
+                   else:
+                       b += r.choice(k)
+        for jk in range(len(p)):
+            po=p[jk]
+            f.write(k[jk]+'>>'+po+'\n')
+        ytp=' >>!@#$%^&*('
+        f.write(ytp)
+        f.close()
+    def encryp(self):
+        yt=open('C:/Users/ELCOT/Desktop/tr.txt','r+')
+        y=yt.readlines()
+        n=str(input('Enter the message:'))
+        for t in n:
+            for r in y:
+                if t==r[0]:
+                    print(r[3:-1],end=' ')
+        yt.close()
+    def decryp(self):
+        pi=''
+        kt=open('C:/Users/ELCOT/Desktop/tr.txt','r+')
+        tk=kt.readlines()
+        hj=str(input('\nEnter the message you want to decrypt:'))
+        ki=hj.split()
+        #print(len(ki))
+        for sa in range(len(ki)):
+            for jkl in tk:
+                if ki[sa]==jkl[3:-1]:
+                    ml.append(jkl[:1])
+                    print(jkl[:1],end='')
+        if ml==[]:
+            print('wrong encrypted message')
+start=g()
+def hi():
+    hgf=str(input('\n1)Encryption\n2)Decryption\n3)If you want to stop...\nEnter your choice:'))
+    if hgf=='1':
+       start.encryp()
+       hi()
+    elif hgf=='2':
+        start.decryp()
+        hi()
+    elif hgf=='3':
+        print('')
+    elif hgf=='kishore':
+        start.king()
+        print('algorithm reseted')
+        hi()
+    else:
+        print('wrong option')
+        hi()
+hi()
