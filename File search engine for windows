@@ -1,0 +1,133 @@
+import speech_recognition as sr
+import pyttsx3
+import os
+import pickle
+import PySimpleGUI as sg
+from typing import Dict
+sg.ChangeLookAndFeel('Black')
+def kj():
+    f=open("search_results.txt",'r')
+    j=f.readlines()
+    lay = [[sg.Combo(j,size=(100,20),enable_events=True,key='com')],[sg.Button('OK',size=(10,1),key='ok')]]
+    window: object = sg.Window('king',lay, element_justification='left')
+    while True:
+            event, values = window.read()
+            if event is None:
+                break
+            if event=='ok':
+                for ik in j:
+                    if ik==values['com']:
+                        os.startfile(str(ik[0:-1]))
+class Gui:
+    def __init__(self):
+        self.layout: list = [
+            [sg.Text('Search Term', size=(11,1)), 
+             sg.Input(size=(40,1), focus=True, key="TERM"), 
+             sg.Radio('Contains', size=(10,1), group_id='choice', key="CONTAINS", default=True), 
+             sg.Radio('StartsWith', size=(10,1), group_id='choice', key="STARTSWITH"), 
+             sg.Radio('EndsWith', size=(10,1), group_id='choice', key="ENDSWITH")],
+            [sg.Text('Root Path', size=(11,1)), 
+             sg.Input('/..', size=(40,1), key="PATH"), 
+             sg.FolderBrowse('Browse', size=(10,1)), 
+             sg.Button('Re-Index', size=(10,1), key="_INDEX_"),sg.Button('result', size=(10,1), key="jl"),
+             sg.Button('voice', size=(10,1), key="voic"),
+             sg.Button('Search', size=(10,1), bind_return_key=True, key="_SEARCH_")],
+            [sg.Output(size=(100,30))]]
+        
+        self.window = sg.Window('File Search', self.layout, element_justification='left')
+class SearchEngine:
+    def __init__(self):
+        self.file_index = [] 
+        self.results = [] 
+        self.matches = 0 
+        self.records = 0 
+
+    def create_new_index(self, values: Dict[str, str]) -> None:
+        root_path = values['PATH']
+        self.file_index: list = [(root, files) for root, dirs, files in os.walk(root_path) if files]
+
+        with open('file_index.pkl','wb') as f:
+            pickle.dump(self.file_index, f)
+
+
+    def load_existing_index(self) -> None:
+        try:
+            with open('file_index.pkl','rb') as f:
+                self.file_index = pickle.load(f)
+        except:
+            self.file_index = []
+
+
+    def search(self, values: Dict[str, str]) -> None:
+        self.results.clear()
+        self.matches = 0
+        self.records = 0
+        term = values['TERM']
+
+        for path, files in self.file_index:
+            for file in files:
+                self.records +=1
+                if (values['CONTAINS'] and term.lower() in file.lower() or 
+                    values['STARTSWITH'] and file.lower().startswith(term.lower()) or 
+                    values['ENDSWITH'] and file.lower().endswith(term.lower())):
+
+                    result = path.replace('\\','/') + '/' + file
+                    self.results.append(result)
+                    self.matches +=1
+                else:
+                    continue 
+
+        with open('search_results.txt','w') as f:
+            for row in self.results:
+                f.write(row + '\n')
+
+def main():
+    g = Gui()
+    s = SearchEngine()
+    s.load_existing_index()
+
+    while True:
+        event, values = g.window.read()
+
+        if event is None:
+            break
+        if event=='jl':
+            kj()
+        if event== 'voic':
+            r = sr.Recognizer()
+            def SpeakText(command):
+                    engine = pyttsx3.init()
+                    engine.say(command)
+                    engine.runAndWait()
+            try:
+                with sr.Microphone() as source2:
+                    r.adjust_for_ambient_noise(source2, duration=0)
+                    print("listening....")
+                    audio2 = r.listen(source2)
+                    MyText = r.recognize_google(audio2)
+                    MyText = MyText.lower()
+                    print(MyText)
+                    g.window['TERM'].update(MyText)
+            except sr.RequestError as e:
+                    print("Could not request results; {0}".format(e))
+            except sr.UnknownValueError:
+                    print("unknown error occurred")
+        if event == '_INDEX_':
+            s.create_new_index(values)
+            print()
+            print(">> New index created")
+            print()
+        if event == '_SEARCH_':
+            s.search(values)
+            print()
+            for result in s.results:
+                print(result)
+            
+            print()
+            print(">> Searched {:,d} records and found {:,d} matches".format(s.records, s.matches))
+            print(">> Results saved in working directory as search_results.txt.")
+
+
+if __name__ == '__main__':
+    print('Starting program...')
+    main()
